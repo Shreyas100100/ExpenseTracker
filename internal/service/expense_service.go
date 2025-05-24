@@ -1,89 +1,41 @@
 package service
 
 import (
-	"errors"
-	"sync"
-	"time"
+	"log"
 
 	"github.com/shreyas100100/ExpenseTracker/internal/model"
-)
-
-var (
-	currentID int = 1
-	expenses  []model.Expense
-	mu        sync.Mutex
+	"github.com/shreyas100100/ExpenseTracker/internal/repository"
 )
 
 func CreateExpense(exp model.Expense) model.Expense {
-	mu.Lock()
-	defer mu.Unlock()
-
-	exp.ID = currentID
-	currentID++
-	expenses = append(expenses, exp)
-	return exp
+	createdExp, err := repository.CreateExpense(exp)
+	if err != nil {
+		log.Fatalf("Error while creating an expense %f", err)
+	}
+	return createdExp
 }
 
 func GetAllExpenses() []model.Expense {
-	mu.Lock()
-	defer mu.Unlock()
-	return append([]model.Expense{}, expenses...)
-}
-
-func GetExpenseByID(expenseID int) (model.Expense, error) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	for _, exp := range expenses {
-		if exp.ID == expenseID {
-			return exp, nil
-		}
-	}
-	return model.Expense{}, errors.New("expense not found")
-}
-
-func GetExpensesByDate(dateString string) ([]model.Expense, error) {
-	targetDate, err := time.Parse(time.RFC3339, dateString)
+	expenses, err := repository.GetAllExpenses()
 	if err != nil {
-		return nil, err
-	}
-	year, month, day := targetDate.Date()
 
-	mu.Lock()
-	defer mu.Unlock()
-
-	var filtered []model.Expense
-	for _, exp := range expenses {
-		expYear, expMonth, expDay := exp.Date.Date()
-		if year == expYear && month == expMonth && day == expDay {
-			filtered = append(filtered, exp)
-		}
+		log.Fatalf("Error while fetching all expenses %f", err)
 	}
-	return filtered, nil
+	return expenses
 }
 
-func UpdateExpense(updatedExp model.Expense) (model.Expense, error) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	for i, exp := range expenses {
-		if exp.ID == updatedExp.ID {
-			expenses[i] = updatedExp
-			return updatedExp, nil
-		}
-	}
-	return model.Expense{}, errors.New("expense not found")
+func GetExpenseByID(id int) (model.Expense, error) {
+	return repository.GetExpenseByID(id)
 }
 
-func DeleteExpense(expenseID int) error {
-	mu.Lock()
-	defer mu.Unlock()
+func GetExpensesByDate(dateStr string) ([]model.Expense, error) {
+	return repository.GetExpensesByDate(dateStr)
+}
 
-	for i, exp := range expenses {
-		if exp.ID == expenseID {
-			expenses = append(expenses[:i], expenses[i+1:]...)
-			return nil
-		}
-	}
-	return errors.New("expense not found")
+func UpdateExpense(exp model.Expense) (model.Expense, error) {
+	return repository.UpdateExpense(exp)
+}
+
+func DeleteExpense(id int) error {
+	return repository.DeleteExpense(id)
 }
