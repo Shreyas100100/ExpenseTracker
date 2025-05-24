@@ -1,16 +1,17 @@
 package service
 
 import (
-	"log"
-
 	"github.com/shreyas100100/ExpenseTracker/internal/model"
 	"github.com/shreyas100100/ExpenseTracker/internal/repository"
+	"github.com/sirupsen/logrus"
 )
+
+var logger = logrus.New()
 
 func CreateExpense(exp model.Expense) model.Expense {
 	createdExp, err := repository.CreateExpense(exp)
 	if err != nil {
-		log.Fatalf("Error while creating an expense %f", err)
+		logger.WithError(err).Error("CreateExpense: error creating expense")
 	}
 	return createdExp
 }
@@ -18,8 +19,7 @@ func CreateExpense(exp model.Expense) model.Expense {
 func GetAllExpenses() []model.Expense {
 	expenses, err := repository.GetAllExpenses()
 	if err != nil {
-
-		log.Fatalf("Error while fetching all expenses %f", err)
+		logger.WithError(err).Error("GetAllExpenses: error fetching expenses")
 	}
 	return expenses
 }
